@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TimeMachine! — 연도별 검색</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #222;
+      background: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: #fff;
+      color: #222;
+      font-size: 14px;
+    }
+
+    a { color: #00c; }
+    a:visited { color: #551a8b; }
+
+    .masthead {
+      padding: 24px 12px 18px;
+      text-align: center;
+    }
+
+    .brand {
+      display: inline-block;
+      color: inherit;
+      text-decoration: none;
+      line-height: 1;
+    }
+
+    .brand-word {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(47px, 10vw, 76px);
+      font-weight: 700;
+      letter-spacing: -5px;
+      white-space: nowrap;
+      text-shadow: 2px 2px 2px rgba(0, 0, 0, .22);
+    }
+
+    .blue { color: #174ea6; }
+    .red { color: #c5221f; }
+    .yellow { color: #c5a900; }
+    .green { color: #188038; }
+
+    .search-band {
+      width: 100%;
+      padding: 10px 14px 12px;
+      background: #eee;
+      border-top: 1px solid #e1e1e1;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    .tagline {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .search-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      margin: 0 auto;
+    }
+
+    .query-input {
+      width: min(520px, 94vw);
+      height: 34px;
+      padding: 4px 8px;
+      border: 2px inset #ddd;
+      border-radius: 0;
+      background: #fff;
+      color: #111;
+      font-size: 16px;
+    }
+
+    .query-input:focus,
+    .year-input:focus,
+    .source-select:focus {
+      outline: 2px solid #4b78c2;
+      outline-offset: 1px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .field-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .year-input,
+    .source-select {
+      min-height: 30px;
+      padding: 3px 6px;
+      border: 1px solid #888;
+      border-radius: 0;
+      background: #fff;
+      color: #222;
+      font-size: 14px;
+    }
+
+    .year-input { width: 96px; }
+    .source-select { min-width: 176px; }
+
+    .retro-button {
+      min-height: 30px;
+      padding: 4px 12px;
+      border: 1px solid #888;
+      border-radius: 2px;
+      background: #e8e8e8;
+      color: #222;
+      font: inherit;
+      cursor: pointer;
+      box-shadow: inset 1px 1px 0 #fff;
+    }
+
+    .retro-button:hover { background: #f6f6f6; }
+    .retro-button:active { background: #ddd; }
+    .retro-button:disabled { cursor: wait; opacity: .6; }
+
+    .search-note {
+      margin: 7px 0 0;
+      color: #444;
+      font-size: 13px;
+    }
+
+    .page-links {
+      padding: 17px 12px 11px;
+      text-align: center;
+    }
+
+    .page-links h1 {
+      margin: 0 0 9px;
+      font-size: 23px;
+      font-weight: 700;
+    }
+
+    .page-links nav { line-height: 1.8; }
+    .page-links nav a { margin: 0 5px; }
+
+    main {
+      width: min(760px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 4px 0 24px;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 6px 0 12px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .warning {
+      margin: 8px 0 14px;
+      padding: 8px 10px;
+      border: 1px solid #d6c98d;
+      background: #fffbea;
+      color: #4b421d;
+      line-height: 1.5;
+    }
+
+    .results {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .result {
+      margin: 0 0 22px;
+      overflow-wrap: anywhere;
+    }
+
+    .result-title {
+      margin: 0 0 2px;
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1.35;
+    }
+
+    .result-title a { text-decoration: underline; }
+
+    .result-url {
+      margin: 0 0 3px;
+      color: #006621;
+      font-size: 13px;
+    }
+
+    .result-meta {
+      margin: 0 0 5px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .result-snippet {
+      margin: 0;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 7px;
+      font-size: 13px;
+    }
+
+    .text-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #00c;
+      text-decoration: underline;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .text-button:disabled { color: #777; cursor: wait; }
+
+    .pagination {
+      padding: 8px 0 22px;
+      text-align: center;
+    }
+
+    .article-panel {
+      margin: 14px 0 24px;
+      padding: 13px 14px;
+      border: 1px solid #aaa;
+      background: #fff;
+    }
+
+    .article-heading-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .article-title {
+      margin: 0 0 5px;
+      font-size: 18px;
+    }
+
+    .article-meta {
+      margin: 0 0 12px;
+      color: #666;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .article-text {
+      margin: 0;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .about {
+      margin-top: 22px;
+      padding: 14px 12px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      line-height: 1.65;
+    }
+
+    .about h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .about p { margin: 5px 0; }
+
+    footer {
+      padding: 10px 14px 14px;
+      background: #eee;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      color: #444;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    [hidden] { display: none !important; }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 560px) {
+      .masthead { padding-top: 27px; }
+      .brand-word { letter-spacing: -4px; }
+      .control-row { max-width: 380px; }
+      .source-select { min-width: 138px; }
+      .page-links h1 { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <a class="brand" href="#top" aria-label="TimeMachine 홈">
+      <span class="brand-word" aria-hidden="true"><span class="blue">T</span><span class="red">i</span><span class="yellow">m</span><span class="blue">e</span><span class="green">M</span><span class="red">a</span><span class="yellow">c</span><span class="blue">h</span><span class="green">i</span><span class="red">n</span><span class="yellow">e</span><span class="blue">!</span></span>
+    </a>
+  </header>
+
+  <section class="search-band" id="top" aria-label="검색">
+    <p class="tagline">Search the web across time!</p>
+    <form class="search-form" id="search-form">
+      <label class="visually-hidden" for="query">검색어</label>
+      <input
+        class="query-input"
+        id="query"
+        type="search"
+        maxlength="600"
+        placeholder="검색어를 입력하세요"
+        autocomplete="off"
+        required
+      >
+
+      <div class="control-row">
+        <label class="field-label" for="year">
+          연도
+          <input class="year-input" id="year" type="number" min="1990" max="2100" required>
+        </label>
+
+        <label class="field-label" for="platform">
+          사이트
+          <select class="source-select" id="platform">
+            <option value="all">전체 웹</option>
+            <option value="facebook">Facebook 공개 색인</option>
+            <option value="dcinside">디시인사이드 공개 색인</option>
+          </select>
+        </label>
+
+        <button class="retro-button" id="search-button" type="submit">TimeMachine Search</button>
+        <button class="retro-button" id="clear-button" type="button">Clear</button>
+      </div>
+    </form>
+    <p class="search-note">선택한 연도의 공개 웹 검색결과를 찾습니다. 사이트별 검색은 색인된 공개 페이지에 한정됩니다.</p>
+  </section>
+
+  <section class="page-links" aria-label="페이지 안내">
+    <h1><a href="#about">About TimeMachine!</a></h1>
+    <nav>
+      <a href="#results">검색 결과</a> |
+      <a href="#sources">검색 대상</a> |
+      <a href="#about">이용 안내</a>
+    </nav>
+  </section>
+
+  <main>
+    <p class="status" id="status" role="status" aria-live="polite">검색어와 연도를 입력한 뒤 검색을 눌러 주세요.</p>
+    <div class="warning" id="source-warning" hidden></div>
+    <ol class="results" id="results" aria-label="검색 결과"></ol>
+
+    <div class="pagination" id="pagination" hidden>
+      <button class="retro-button" id="more-button" type="button">더 많은 결과 보기</button>
+    </div>
+
+    <section class="article-panel" id="article-panel" hidden aria-live="polite">
+      <div class="article-heading-row">
+        <div>
+          <h2 class="article-title" id="article-title"></h2>
+          <p class="article-meta" id="article-meta"></p>
+        </div>
+        <button class="text-button" id="close-article" type="button">닫기</button>
+      </div>
+      <p class="article-text" id="article-text"></p>
+    </section>
+
+    <section class="about" id="about">
+      <h2><a href="#top">About TimeMachine!</a></h2>
+      <p>연도와 사이트를 선택해 공개 웹 검색결과를 찾아보는 개인 검색 프로젝트입니다.</p>
+      <p>Brave와 Exa의 검색결과를 결합하며, 결과의 날짜와 출처를 함께 표시합니다.</p>
+    </section>
+
+    <section class="about" id="sources">
+      <h2>검색 대상</h2>
+      <p>전체 웹, Facebook 및 디시인사이드의 공개 색인 페이지를 검색합니다.</p>
+      <p>비공개·로그인 필요·미색인 게시물이나 플랫폼 공식 API 결과는 포함하지 않습니다.</p>
+      <p>날짜를 확인할 수 없는 검색 결과는 별도로 표시하며, 원문 본문은 게시일 확인 후 제공합니다.</p>
+    </section>
+  </main>
+
+  <footer>
+    TimeMachine! · 공개 검색결과를 모아 보여주는 프로젝트<br>
+    검색엔진이 날짜를 파악하지 못한 글은 누락되거나 연도가 다르게 표시될 수 있습니다.
+  </footer>
+
+  <script>
+    const form = document.getElementById("search-form");
+    const queryInput = document.getElementById("query");
+    const yearInput = document.getElementById("year");
+    const platformInput = document.getElementById("platform");
+    const searchButton = document.getElementById("search-button");
+    const clearButton = document.getElementById("clear-button");
+    const moreButton = document.getElementById("more-button");
+    const statusBox = document.getElementById("status");
+    const sourceWarning = document.getElementById("source-warning");
+    const resultsBox = document.getElementById("results");
+    const paginationBox = document.getElementById("pagination");
+    const articlePanel = document.getElementById("article-panel");
+    const articleTitle = document.getElementById("article-title");
+    const articleMeta = document.getElementById("article-meta");
+    const articleText = document.getElementById("article-text");
+
+    const state = {
+      query: "",
+      year: new Date().getFullYear() - 1,
+      platform: "all",
+      nextOffset: null,
+      hasMore: false,
+      results: [],
+      seenUrls: new Set(),
+      unknownDateCount: 0,
+      omittedOutsideYear: 0
+    };
+
+    let searchRequestNumber = 0;
+    yearInput.value = state.year;
+
+    function normalizeUrl(rawUrl) {
+      try {
+        const url = new URL(rawUrl);
+        url.hash = "";
+        for (const key of [...url.searchParams.keys()]) {
+          if (/^(utm_.+|fbclid|gclid)$/i.test(key)) {
+            url.searchParams.delete(key);
+          }
+        }
+        return url.toString().replace(/\/$/, "");
+      } catch {
+        return rawUrl;
+      }
+    }
+
+    function makeElement(tag, className, text) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
+    }
+
+    function renderResults() {
+      resultsBox.replaceChildren();
+
+      for (const item of state.results) {
+        const row = document.createElement("li");
+        row.className = "result";
+
+        const title = makeElement("h2", "result-title");
+        const titleLink = makeElement("a", "", item.title || item.url);
+        titleLink.href = item.url;
+        titleLink.target = "_blank";
+        titleLink.rel = "noopener noreferrer";
+        title.append(titleLink);
+
+        const urlLine = makeElement("p", "result-url", item.url);
+        const providers = Array.isArray(item.providers)
+          ? item.providers.join(", ")
+          : (item.provider || "검색결과");
+        const meta = makeElement(
+          "p",
+          "result-meta",
+          [item.date || "게시일 미확인", providers].filter(Boolean).join(" · ")
+        );
+        const snippet = makeElement(
+          "p",
+          "result-snippet",
+          item.snippet || "검색결과 설명이 제공되지 않았습니다."
+        );
+
+        const actions = makeElement("div", "result-actions");
+        const articleButton = makeElement("button", "text-button", "원문 본문 보기");
+        articleButton.type = "button";
+        articleButton.addEventListener("click", () => loadArticle(item.id, articleButton));
+
+        const originalLink = makeElement("a", "", "원문 사이트 열기");
+        originalLink.href = item.url;
+        originalLink.target = "_blank";
+        originalLink.rel = "noopener noreferrer";
+
+        actions.append(articleButton, originalLink);
+        row.append(title, urlLine, meta, snippet, actions);
+        resultsBox.append(row);
+      }
+
+      paginationBox.hidden = !state.hasMore;
+    }
+
+    async function searchPage(offset = 0, append = false) {
+      const requestNumber = ++searchRequestNumber;
+      searchButton.disabled = true;
+      moreButton.disabled = true;
+      sourceWarning.hidden = true;
+      sourceWarning.textContent = "";
+      articlePanel.hidden = true;
+
+      if (!append) {
+        state.results = [];
+        state.seenUrls.clear();
+        state.unknownDateCount = 0;
+        state.omittedOutsideYear = 0;
+        state.nextOffset = null;
+        state.hasMore = false;
+        resultsBox.replaceChildren();
+        paginationBox.hidden = true;
+      }
+
+      statusBox.textContent = append ? "다음 검색결과를 불러오는 중입니다…" : "검색 중입니다…";
+
+      try {
+        const params = new URLSearchParams({
+          q: state.query,
+          year: String(state.year),
+          platform: state.platform,
+          offset: String(offset)
+        });
+
+        const response = await fetch(`/api/search?${params.toString()}`);
+        const data = await response.json();
+
+        if (requestNumber !== searchRequestNumber) return;
+        if (!response.ok) throw new Error(data.error || "검색에 실패했습니다.");
+
+        let addedUnknownDates = 0;
+        for (const item of data.results ?? []) {
+          const key = normalizeUrl(item.url || "");
+          if (!key || state.seenUrls.has(key)) continue;
+          state.seenUrls.add(key);
+          state.results.push(item);
+          if (!item.date) addedUnknownDates += 1;
+        }
+
+        state.unknownDateCount += addedUnknownDates;
+        state.omittedOutsideYear += Number(data.omittedOutsideYear || 0);
+        state.hasMore = Boolean(data.hasMore);
+        state.nextOffset = state.hasMore && offset < 9 ? offset + 1 : null;
+
+        renderResults();
+
+        if (Array.isArray(data.sourceErrors) && data.sourceErrors.length) {
+          sourceWarning.textContent =
+            `일부 검색 서비스에 문제가 있었습니다: ${data.sourceErrors.join(" / ")}`;
+          sourceWarning.hidden = false;
+        }
+
+        if (state.results.length === 0) {
+          statusBox.textContent =
+            `해당 연도 범위에 표시할 검색 결과가 없습니다.${state.omittedOutsideYear
+              ? ` 선택 연도 범위 밖 결과 ${state.omittedOutsideYear}건은 제외했습니다.`
+              : ""}`;
+        } else {
+          const unknownDateText = state.unknownDateCount > 0
+            ? ` 날짜 미확인 ${state.unknownDateCount}건을 포함했습니다.`
+            : "";
+          const outsideYearText = state.omittedOutsideYear > 0
+            ? ` 선택 연도 범위 밖 결과 ${state.omittedOutsideYear}건은 제외했습니다.`
+            : "";
+          statusBox.textContent =
+            `${state.year}년 검색결과 ${state.results.length}건을 표시합니다.` +
+            unknownDateText +
+            outsideYearText;
+        }
+      } catch (error) {
+        if (requestNumber === searchRequestNumber) {
+          statusBox.textContent = error.message || "검색 중 오류가 발생했습니다.";
+        }
+      } finally {
+        if (requestNumber === searchRequestNumber) {
+          searchButton.disabled = false;
+          moreButton.disabled = false;
+        }
+      }
+    }
+
+    async function loadArticle(id, button) {
+      if (!id) {
+        statusBox.textContent =
+          "이 결과에는 본문 조회용 식별자가 없습니다. 원문 사이트를 열어 확인해 주세요.";
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "본문 불러오는 중…";
+      statusBox.textContent = "원문에서 게시일과 본문을 확인하고 있습니다…";
+
+      try {
+        const response = await fetch(`/api/article/${encodeURIComponent(id)}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "원문 본문을 가져오지 못했습니다.");
+        }
+
+        articleTitle.textContent = data.title || "원문 본문";
+        articleMeta.textContent =
+          `게시일: ${data.publishedDate || "확인되지 않음"} · ${data.url || ""}`;
+        articleText.textContent = data.text || "본문이 비어 있습니다.";
+        articlePanel.hidden = false;
+        statusBox.textContent = "원문 본문을 표시했습니다.";
+        articlePanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (error) {
+        statusBox.textContent = error.message || "원문 본문을 가져오지 못했습니다.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "원문 본문 보기";
+      }
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      state.query = queryInput.value.trim();
+      state.year = Number(yearInput.value);
+      state.platform = platformInput.value;
+
+      if (!state.query) {
+        statusBox.textContent = "검색어를 입력해 주세요.";
+        queryInput.focus();
+        return;
+      }
+
+      if (!Number.isInteger(state.year) || state.year < 1990 || state.year > 2100) {
+        statusBox.textContent = "1990년부터 2100년 사이의 연도를 입력해 주세요.";
+        yearInput.focus();
+        return;
+      }
+
+      searchPage(0, false);
+    });
+
+    moreButton.addEventListener("click", () => {
+      if (state.hasMore && Number.isInteger(state.nextOffset)) {
+        searchPage(state.nextOffset, true);
+      }
+    });
+
+    clearButton.addEventListener("click", () => {
+      queryInput.value = "";
+      queryInput.focus();
+    });
+
+    document.getElementById("close-article").addEventListener("click", () => {
+      articlePanel.hidden = true;
+    });
+  </script>
+</body>
+</html>
