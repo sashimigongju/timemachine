@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: timemachine
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: cd year-search && node server.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BRAVE_API_KEY
+        sync: false
+      - key: EXA_API_KEY
+        sync: false
